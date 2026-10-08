@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Escondite V1.4</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--bg:#0b1020;--dark:#111827;--muted:#667085;--line:#e5e7eb;--card:rgba(255,255,255,.94);--accent:#6d5dfc;--accent2:#ff4f87;--gold:#ffc83d}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% 15%,rgba(109,93,252,.45),transparent 28%),radial-gradient(circle at 85% 20%,rgba(255,79,135,.34),transparent 25%),radial-gradient(circle at 50% 90%,rgba(6,182,212,.22),transparent 30%),linear-gradient(145deg,#090d1a,#17122b 52%,#0d1727);background-attachment:fixed;color:var(--dark);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+.app{max-width:480px;min-height:100vh;margin:auto;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(247,248,255,.92));box-shadow:0 10px 50px rgba(0,0,0,.35);backdrop-filter:blur(14px);position:relative;overflow:hidden}.app:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(109,93,252,.10);top:90px;right:-90px;pointer-events:none}.app:after{content:"";position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,79,135,.08);bottom:80px;left:-70px;pointer-events:none}
+header{height:66px;padding:0 18px;display:flex;align-items:center;border-bottom:1px solid var(--line);background:#ffffffec;backdrop-filter:blur(10px);position:sticky;top:0;z-index:20}
+.logo{font-size:18px;font-weight:950;letter-spacing:.5px}.back{border:0;background:none;font-size:30px;margin-right:10px;cursor:pointer;color:var(--dark)}
+main{padding:22px}.screen{display:none}.screen.active{display:block}
+.home{text-align:center;padding-top:30px}.hero{font-size:76px;filter:drop-shadow(0 8px 8px #6d5dfc22);animation:float 2.5s ease-in-out infinite}
+h1{font-size:40px;line-height:1;margin:10px 0 8px;font-weight:950;letter-spacing:-1px}
+.home .tag{display:inline-block;background:#ede9fe;color:#5547d9;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:800;margin:4px 0 15px}
+.muted{color:var(--muted);line-height:1.5}.btn{width:100%;padding:16px;border-radius:16px;font-weight:850;font-size:15px;margin-top:12px;cursor:pointer;transition:.15s;position:relative;z-index:30;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:rgba(109,93,252,.28)}
+.dark{background:linear-gradient(135deg,#111827,#343b52);color:#fff;border:0;box-shadow:0 8px 18px #11182722}.pink{background:linear-gradient(135deg,#6d5dfc,#d84dff);color:white;border:0;box-shadow:0 8px 18px #6d5dfc35}.outline{background:white;color:var(--dark);border:2px solid #dfe3eb}
+.btn:active{transform:scale(.98)}h2{font-size:29px;margin:8px 0 12px;letter-spacing:-.5px}
+label{display:block;font-size:13px;font-weight:850;margin:18px 0 7px}input{width:100%;padding:15px;border:2px solid #e1e5ec;border-radius:13px;font-size:16px;outline:0}input:focus{border-color:var(--accent)}
+.codebox,.card{padding:16px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 5px 18px #1018280b}.codebox{display:flex;justify-content:space-between;align-items:center}.codebox small{display:block;color:#7b8494;font-size:10px;font-weight:900}.codebox strong{font-size:25px;letter-spacing:5px}.copy{border:0;background:#f3f4f6;padding:10px;border-radius:10px;font-weight:850}
+.player{display:flex;align-items:center;gap:11px;padding:13px 2px;border-bottom:1px solid #edf0f4}.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ede9fe,#fce7f3)}
+.role{padding:19px;border-radius:18px;text-align:center;font-size:21px;font-weight:900;background:#eef0f5}.role.seeker{background:linear-gradient(135deg,#111827,#343b52);color:#fff}
+.count-title{text-align:center}.count{font-size:90px;text-align:center;font-weight:950;padding:5px 0;color:var(--accent);animation:pulse .9s infinite}.party{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0 25px}.chip{background:#f3f4f6;border-radius:99px;padding:8px 12px;font-size:13px;font-weight:750}
+.wheel-wrap{text-align:center;position:relative}.wheel{width:270px;height:270px;border-radius:50%;margin:18px auto;position:relative;border:9px solid #111827;box-shadow:0 12px 30px #11182735;overflow:hidden;background:#eee;transform:rotate(0deg);transition:transform 3.3s cubic-bezier(.12,.78,.17,1)}.segment{position:absolute;inset:0;border-radius:50%;display:flex;align-items:flex-start;justify-content:center;pointer-events:none}.segment span{position:absolute;top:30px;width:95px;font-size:11px;line-height:1.15;font-weight:950;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);text-align:center;transform-origin:50% 105px}.star{display:block;color:#ffc83d;font-size:14px;margin-bottom:2px}.wheel-wrap{position:relative}.pointer{position:absolute;z-index:15;top:2px;left:50%;transform:translateX(-50%);font-size:31px;color:#111827;text-shadow:0 2px 3px #fff;pointer-events:none}.result{font-size:20px;font-weight:900}.map{height:360px;border-radius:18px;overflow:hidden;margin:14px 0;position:relative;background:#dfe7ef;box-shadow:0 6px 18px rgba(16,24,40,.12)}.emoji-marker{background:transparent;border:0}.leaflet-container{width:100%;height:100%;font:inherit;z-index:1}.corner-label{background:#fff;border:2px solid #111827;border-radius:50%;box-shadow:none;color:#111827;font-weight:900;font-size:11px;line-height:18px;width:18px!important;height:18px!important;text-align:center;padding:0}.map{touch-action:auto}.help{font-size:12px;color:var(--muted)}.tools{display:grid;grid-template-columns:1fr 1fr;gap:9px}.tools .btn{margin:0}.status{padding:11px 12px;border-radius:12px;background:#f4f5f7;font-size:12px;margin:10px 0}.warn{background:#fff5e8;color:#8a5500}.good{background:#ecfdf3;color:#087443}
+#map,#gameMap{height:350px}.area-info{font-size:13px;font-weight:750;margin:8px 0}
+.hidden{display:none!important}.game-title{text-align:center;margin:0 0 10px;font-size:25px;font-weight:950}.delay-note{font-size:12px;font-weight:800;text-align:center;margin:8px 0 0;color:#667085}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(1550deg)}}@keyframes pulse{50%{transform:scale(1.08)}}@keyframes float{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.wheel,.count,.hero{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><button id="back" class="back hidden">←</button><div class="logo">🕵️ ESCONDITE</div></header>
+<main>
+<section id="home" class="screen active home">
+<div class="hero">🕵️‍♂️</div><div class="tag">JUEGA EN LA VIDA REAL</div><h1>ESCONDITE</h1>
+<p class="muted">Crea una sala, invita a tus amigos y descubre quién se la queda.</p>
+<button class="btn pink" id="create">CREAR SALA</button><button class="btn outline" id="join">UNIRSE A SALA</button>
+</section>
+
+<section id="createScreen" class="screen"><h2>Crear sala</h2><p class="muted">Elige el nombre que verán tus amigos.</p><label>Tu nombre</label><input id="createName" maxlength="18" placeholder="Ej. Pablo"><button class="btn pink" id="createGo">CREAR SALA</button></section>
+
+<section id="createZone" class="screen"><h2>Delimita la zona</h2><p class="muted">Marca las esquinas en este orden: 1️⃣ arriba izquierda · 2️⃣ arriba derecha · 3️⃣ abajo derecha · 4️⃣ abajo izquierda. Después podrás guardar la zona.</p><div id="map" class="map"></div><div id="areaInfo" class="area-info">Toca el mapa para colocar la esquina 1 de 4</div><div class="tools"><button class="btn outline" id="clearArea">BORRAR</button><button class="btn outline" id="locate">MI UBICACIÓN</button></div><button class="btn pink" id="confirm">GUARDAR ZONA Y SIGUIENTE PASO</button><p id="locError" class="help"></p></section>
+
+<section id="joinScreen" class="screen"><h2>Unirse a sala</h2><p class="muted">Introduce el código de la sala.</p><label>Tu nombre</label><input id="joinName" maxlength="18" placeholder="Ej. Pablo"><label>Código</label><input id="joinCode" maxlength="6" placeholder="ABC123" style="text-transform:uppercase;letter-spacing:5px"><p id="error" style="color:#b42318"></p><button class="btn pink" id="joinGo">UNIRSE</button><p class="help">Necesitas Internet en ambos móviles. Mantén abierta la sala del creador.</p></section>
+
+<section id="lobby" class="screen"><div class="codebox"><div><small>CÓDIGO DE SALA</small><strong id="roomCode">------</strong></div><button class="copy" id="copy">COPIAR</button></div><h2>Jugadores</h2><div id="players"></div><button class="btn pink" id="start">EMPEZAR PARTIDA</button><p id="lobbyText" class="muted" style="text-align:center;font-size:12px"></p></section>
+
+<section id="countdown" class="screen"><h2 class="count-title">La partida empieza en...</h2><div id="count" class="count">3</div><div id="party" class="party"></div><p class="muted" style="text-align:center">Todos los jugadores aparecen antes del sorteo.</p></section>
+
+<section id="roulette" class="screen"><h2 style="text-align:center">¿Quién se la queda?</h2><div class="wheel-wrap"><div class="pointer">▼</div><div id="wheel" class="wheel"></div><p id="rouletteResult" class="result">Sorteando...</p></div></section>
+
+<section id="setup" class="screen"><h2>Zona ya fijada</h2><p class="muted">La zona ya está preparada. Espera al sorteo.</p><div class="card" style="text-align:center"><b>El mapa aparecerá solamente cuando empiece la partida.</b></div></section>
+
+<section id="game" class="screen"><h2 id="gameTitle" class="game-title">Partida</h2><div id="role" class="role"></div><div id="status" class="status"></div><div id="gameMap" class="map"></div><div id="caughtPanel" class="card hidden" style="margin-top:12px"><b>Jugadores que quedan</b><div id="caughtButtons"></div></div><p id="gameText" class="muted"></p><button id="end" class="btn dark">TERMINAR PARTIDA</button></section>
+</main></div>
+
+<script>
+(function(){
+const EMOJIS=["🦊","🐼","🐸","🐨","🐯","🐵","🐰","🐱","🐶","🦁","🐻","🐙","🦄","🐧","🐹","🐲","🐝"];
+const S={screen:"home",name:"",room:"",players:[],host:false,seeker:"",map:null,gameMap:null,points:[],markers:[],area:null,peer:null,hostPeerId:"",conns:[],hostConn:null,ready:false,roleReady:false,zoneReady:false,zoneConfirmed:false,starting:false,countdownTimer:null,watchers:{},lastLocation:null,lastSeekerId:"",round:0,caught:new Set(),remotePlayers:{},joinLocation:null};
+const $=id=>document.getElementById(id),screens=["home","createScreen","createZone","joinScreen","lobby","countdown","roulette","setup","game"];
+function show(id){screens.forEach(x=>$(x).classList.remove("active"));$(id).classList.add("active");S.screen=id;if(id==="createZone"&&S.map)setTimeout(()=>S.map.invalidateSize(true),80);if(id==="setup"&&S.map)setTimeout(()=>S.map.invalidateSize(true),80);if(id==="game"&&S.gameMap)setTimeout(()=>S.gameMap.invalidateSize(true),80)}
+$("back").onclick=()=>show(S.screen==="home"?"home":S.screen==="game"?"lobby":S.screen==="lobby"?"home":"home");
+$("create").onclick=()=>show("createScreen");$("join").onclick=()=>show("joinScreen");
+function makeCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+function emojiFor(i){return EMOJIS[i%EMOJIS.length]}
+function playerByName(n){return S.players.find(p=>p.name===n)}
+function playerEmoji(n){return playerByName(n)?.emoji||"👤"}
+function render(){
+ $("roomCode").textContent=S.room||"------";$('players').innerHTML="";
+ S.players.forEach((p,i)=>{let d=document.createElement("div");d.className="player";d.innerHTML='<div class="avatar"></div><div><b></b>'+(i===0?" · creador":"")+'</div>';d.querySelector('.avatar').textContent=p.emoji;d.querySelector('b').textContent=p.name;$('players').appendChild(d)});
+ $("demo").style.display=S.host?"block":"none";$("start").style.display=S.host?"block":"none";
+ $("lobbyText").textContent=S.host?"Comparte el código con tus amigos.":"Conectado. Espera a que el creador empiece.";
+}
+function safeSend(conn,msg){try{if(conn&&conn.open)conn.send(msg)}catch(e){}}
+function broadcast(msg){S.conns.forEach(c=>safeSend(c,msg))}
+function addPlayer(p){if(!S.players.some(x=>x.id===p.id)){p.emoji=p.emoji||emojiFor(S.players.length);S.players.push(p);render()}}
+function setupPeerHost(){
+ S.hostPeerId="escondite-"+S.room.toLowerCase();
+ try{S.peer=new Peer(S.hostPeerId,{debug:1});}catch(e){console.error(e);return}
+ S.peer.on('open',()=>{S.ready=true;render();$('lobbyText').textContent='Sala abierta. Comparte el código '+S.room+' con tus amigos.';});
+ S.peer.on('connection',conn=>{
+   conn.on('open',()=>{
+     if(!S.conns.includes(conn))S.conns.push(conn);
+     conn.playerId=conn.metadata?.peerId||null;
+     safeSend(conn,{type:'state',players:S.players,room:S.room,points:S.points,zoneConfirmed:S.zoneConfirmed,hostPeerId:S.hostPeerId});
+   });
+   conn.on('data',msg=>handleHostMessage(conn,msg));
+   conn.on('close',()=>{
+     S.conns=S.conns.filter(c=>c!==conn);
+     if(conn.playerId){S.players=S.players.filter(p=>p.id!==conn.playerId);broadcast({type:'state',players:S.players,room:S.room,points:S.points,zoneConfirmed:S.zoneConfirmed});render();}
+   });
+   conn.on('error',e=>console.error('connection',e));
+ });
+ S.peer.on('error',e=>{
+   console.error('PeerJS host error',e);
+   const text=e?.type==='unavailable-id'?'Esta sala ya está abierta en otro dispositivo o pestaña. Cierra esa sala y crea una sala nueva.':'No se pudo abrir la conexión entre móviles. Comprueba que ambos tienen Internet.';
+   $('lobbyText').textContent=text;
+ });
+}
+function pointInPolygon(lat,lng,points){
+ if(!Array.isArray(points)||points.length<3)return false;
+ let inside=false;
+ for(let i=0,j=points.length-1;i<points.length;j=i){
+   const yi=points[i][0],xi=points[i][1],yj=points[j][0],xj=points[j][1];
+   const intersect=((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi);
+   if(intersect)inside=!inside;
+ }
+ return inside;
+}
+function getJoinLocation(){
+ return new Promise(resolve=>{
+   if(!navigator.geolocation){$("error").textContent='Mantente en la zona para unirte a la partida';return resolve(false)}
+   navigator.geolocation.getCurrentPosition(p=>{
+     S.joinLocation={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
+     resolve(true);
+   },err=>{
+     $("error").textContent=err.code===1?'Necesitas permitir la ubicación para comprobar que estás en la zona.':'No se pudo obtener tu ubicación. Mantente en la zona para unirte a la partida';
+     resolve(false);
+   },{enableHighAccuracy:true,maximumAge:0,timeout:12000});
+ });
+}
+function setupPeerClient(){
+ try{S.peer=new Peer({debug:1});}catch(e){console.error(e);$('error').textContent='No se pudo iniciar la conexión.';return}
+ S.peer.on('open',()=>{
+   S.ready=true;
+   $('lobbyText').textContent='Conectando con el creador…';
+   S.hostConn=S.peer.connect("escondite-"+S.room.toLowerCase(),{reliable:true,metadata:{peerId:S.peer.id},serialization:'json'});
+   let done=false;
+   const timer=setTimeout(()=>{if(!done){$('lobbyText').textContent='No se encontró la sala. Comprueba el código y que el creador siga dentro de la sala.';}},10000);
+   S.hostConn.on('open',()=>{done=true;clearTimeout(timer);safeSend(S.hostConn,{type:'join',name:S.name,peerId:S.peer.id,lat:S.joinLocation?.lat,lng:S.joinLocation?.lng,accuracy:S.joinLocation?.accuracy});$('lobbyText').textContent='Conectado con el creador. Espera a que empiece.';});
+   S.hostConn.on('data',msg=>handleClientMessage(msg));
+   S.hostConn.on('close',()=>{$('lobbyText').textContent='Se ha perdido la conexión con el creador.';});
+   S.hostConn.on('error',e=>{console.error('host connection',e);$('lobbyText').textContent='No se pudo conectar con esa sala.';});
+ });
+ S.peer.on('error',e=>{$('error').textContent='No se pudo conectar con la sala. Comprueba el código y que el creador tenga la sala abierta.';console.error('PeerJS client error',e)});
+}
+function handleHostMessage(conn,msg){
+ if(!msg)return;
+ if(msg.type==='join'){
+   if(!S.zoneConfirmed||S.points.length!==4){
+     safeSend(conn,{type:'joinDenied',reason:'zone-not-ready'});
+     return;
+   }
+   const inside=Number.isFinite(msg.lat)&&Number.isFinite(msg.lng)&&pointInPolygon(msg.lat,msg.lng,S.points);
+   if(!inside){
+     safeSend(conn,{type:'joinDenied',reason:'outside-zone'});
+     return;
+   }
+   const p={id:msg.peerId,name:msg.name,emoji:emojiFor(S.players.length)};
+   addPlayer(p);conn.playerId=p.id;
+   safeSend(conn,{type:'joinAccepted',playerId:p.id});
+   safeSend(conn,{type:'state',players:S.players,room:S.room,points:S.points,zoneConfirmed:S.zoneConfirmed,hostPeerId:S.hostPeerId});
+   broadcast({type:'state',players:S.players,room:S.room,points:S.points,zoneConfirmed:S.zoneConfirmed});
+ }
+ if(msg.type==='location') relayLocation(msg);
+ if(msg.type==='zone'){S.points=msg.points||[];S.zoneConfirmed=true;broadcast({type:'zone',points:S.points});}
+ if(msg.type==='end'){ resetMatch(false); broadcast({type:'end',round:S.round}); }
+ if(msg.type==='caught'){ handleCaught(msg.playerId); }
+ if(msg.type==='caughtSync'){ broadcast(msg); }
+}
+function relayLocation(msg){
+ if(!S.seeker || msg.name===S.seeker || S.caught.has(msg.playerId))return;
+ const seeker=playerByName(S.seeker);
+ const payload={type:'location',playerId:msg.playerId,name:msg.name,emoji:msg.emoji,lat:msg.lat,lng:msg.lng,accuracy:msg.accuracy,sentAt:Date.now()};
+ if(S.host && S.name===S.seeker){
+   queueDelayedLocation(payload);
+   return;
+ }
+ const c=S.conns.find(x=>x.playerId===seeker?.id);
+ if(c)setTimeout(()=>safeSend(c,payload),5000);
+}
+function handleClientMessage(msg){
+ if(!msg)return;
+ if(msg.type==='state'){S.players=msg.players||[];S.points=msg.points||S.points||[];S.zoneConfirmed=!!msg.zoneConfirmed;render();}
+ if(msg.type==='joinDenied'){
+   if(msg.reason==='outside-zone'){$("error").textContent='Mantente en la zona para unirte a la partida';}
+   else $("error").textContent='El creador todavía no ha delimitado la zona. Inténtalo cuando la zona esté guardada.';
+   if(S.hostConn){try{S.hostConn.close()}catch(e){}}
+   show('joinScreen');
+ }
+ if(msg.type==='joinAccepted'){$("lobbyText").textContent='¡Estás dentro de la zona! Conectado con el creador.';}
+ if(msg.type==='start'){startCountdown(msg.seed)}
+ if(msg.type==='seeker'){S.seeker=msg.name;roulette(msg.index,true);}
+ if(msg.type==='zone'){S.points=msg.points||[];S.zoneConfirmed=true;}
+ if(msg.type==='location')queueDelayedLocation(msg);
+ if(msg.type==='end'){ resetMatch(true); show('lobby'); render(); }
+ if(msg.type==='caught'){ applyCaught(msg.playerId); }
+ if(msg.type==='caughtSync'){ applyCaught(msg.playerId); }
+}
+$("createGo").onclick=()=>{let n=$("createName").value.trim();if(!n)return alert("Escribe tu nombre.");S.name=n;S.room=makeCode();S.players=[{id:"host",name:n,emoji:emojiFor(0)}];S.host=true;S.points=[];S.zoneConfirmed=false;S.starting=false;setupPeerHost();setupCreatorZone()}
+$("joinGo").onclick=async()=>{
+ let n=$("joinName").value.trim(),c=$("joinCode").value.trim().toUpperCase();
+ if(!n||c.length!==6){$("error").textContent="Escribe nombre y código de 6 caracteres.";return}
+ $("error").textContent="Solicitando tu ubicación para comprobar que estás dentro de la zona…";
+ const ok=await getJoinLocation();
+ if(!ok)return;
+ $("error").textContent="";S.name=n;S.room=c;S.host=false;S.players=[{id:"me",name:n,emoji:emojiFor(0)}];render();show("lobby");setupPeerClient()
+}
+$("copy").onclick=()=>{navigator.clipboard?.writeText(S.room);alert("Código: "+S.room)}
+let lastStartTap=0;
+function beginMatch(){
+ const now=Date.now();
+ if(now-lastStartTap<500)return;
+ lastStartTap=now;
+ const info=$("lobbyText");
+ if(!S.host){info.textContent="Solo el creador de la sala puede empezar la partida.";return;}
+ if(S.points.length===4)S.zoneConfirmed=true;
+ if(S.players.length<2){info.textContent="Añade al menos otro jugador antes de empezar. Ahora mismo hay "+S.players.length+" jugador(es).";return;}
+ if(!S.zoneConfirmed||S.points.length!==4){info.textContent="La zona todavía no está completa: marca las 4 esquinas y pulsa «GUARDAR ZONA».";return;}
+ if(S.starting)return;
+ S.starting=true;
+ info.textContent="¡Partida comenzando!";
+ try{
+   const roundSeed=secureRandomInt(0x7fffffff);
+   broadcast({type:"start",seed:roundSeed,round:S.round+1});
+   startCountdown(roundSeed);
+ }catch(err){
+   S.starting=false;
+   console.error(err);
+   info.textContent="Error al iniciar la partida. Pulsa otra vez.";
+ }
+}
+$("start").onclick=beginMatch;
+document.addEventListener("pointerup",function(e){const b=e.target.closest&&e.target.closest("#start");if(b){e.preventDefault();beginMatch()}},true);
+$("start").addEventListener("touchend",function(e){e.preventDefault();beginMatch();},{passive:false});
+function startCountdown(seed){
+ if(S.countdownTimer)clearInterval(S.countdownTimer);
+ const party=$("party");
+ party.innerHTML="";
+ S.players.forEach(p=>{const chip=document.createElement("span");chip.className="chip";chip.textContent=(p.emoji||"👤")+" "+p.name;party.appendChild(chip)});
+ show("countdown");
+ let n=3;
+ $("count").textContent=n;
+ S.countdownTimer=setInterval(()=>{
+   n--;
+   if(n<=0){
+     clearInterval(S.countdownTimer);S.countdownTimer=null;
+     if(S.host)doHostRoulette();
+   }else $("count").textContent=n;
+ },1000);
+}
+function secureRandomInt(max){
+ if(max<=1)return 0;
+ if(window.crypto&&crypto.getRandomValues){const a=new Uint32Array(1);crypto.getRandomValues(a);return Math.floor((a[0]/4294967296)*max);}
+ return Math.floor(Math.random()*max);
+}
+function doHostRoulette(){
+ if(S.players.length<2)return;
+ let idx=secureRandomInt(S.players.length);
+ if(S.players.length>1 && S.players[idx].id===S.lastSeekerId){
+   idx=(idx+1+secureRandomInt(S.players.length-1))%S.players.length;
+ }
+ const chosen=S.players[idx];
+ S.seeker=chosen.name;
+ S.lastSeekerId=chosen.id;
+ S.round++;
+ broadcast({type:'seeker',name:S.seeker,index:idx,round:S.round});
+ roulette(idx,false);
+}
+function roulette(idx,remote){
+ show('roulette');
+ const result=$('rouletteResult'),wheel=$('wheel');
+ result.textContent='Sorteando…';
+ wheel.innerHTML='';
+ const colors=['#8b5cf6','#ec4899','#06b6d4','#f59e0b','#22c55e','#ef4444','#3b82f6','#14b8a6'];
+ const n=Math.max(1,S.players.length),step=360/n;
+ wheel.style.transition='none';
+ wheel.style.transform='rotate(0deg)';
+ wheel.style.background='conic-gradient('+S.players.map((p,i)=>colors[i%colors.length]+' '+(i*step)+'deg '+((i+1)*step)+'deg').join(',')+')';
+ S.players.forEach((p,i)=>{
+   const seg=document.createElement('div');seg.className='segment';
+   const span=document.createElement('span');
+   const star=document.createElement('i');star.className='star';star.textContent=p.emoji||'👤';
+   span.appendChild(star);span.appendChild(document.createTextNode(p.name));
+   span.style.transform='rotate('+(i*step+step/2)+'deg)';seg.appendChild(span);wheel.appendChild(seg);
+ });
+ const target=1440+(360-(idx*step+step/2));
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   wheel.style.transition='transform 3.3s cubic-bezier(.12,.78,.17,1)';
+   wheel.style.transform='rotate('+target+'deg)';
+ }));
+ setTimeout(()=>{
+   result.textContent=playerEmoji(S.seeker)+' '+S.seeker+' se la queda';
+   setTimeout(()=>startGame(),1600);
+ },3500);
+}
+function waitForZone(){show('setup');$('setupInfo').textContent='Zona de juego fijada por el creador. Espera al sorteo.';}
+function initLeafletMap(elementId,center=[40.4168,-3.7038],zoom=14){if(typeof L==='undefined'){const el=$(elementId);el.innerHTML='<div style="padding:18px;color:#7f1d1d">No se pudo cargar el motor del mapa. Comprueba que tienes conexión y abre la aplicación desde HTTPS.</div>';return null}let map=L.map(elementId,{zoomControl:true,attributionControl:true}).setView(center,zoom);const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors',crossOrigin:true});tiles.on('tileerror',()=>{$(elementId).dataset.tileError='true'});tiles.addTo(map);setTimeout(()=>map.invalidateSize(true),100);return map}
+function drawFixedArea(map){if(!map||S.points.length<2)return null;if(S.area&&map.hasLayer(S.area))map.removeLayer(S.area);S.area=L.polygon(S.points,{color:'#6d5dfc',fillColor:'#8b5cf6',fillOpacity:.18,weight:3}).addTo(map);return S.area}
+function setupCreatorZone(){
+ show('createZone');
+ if(!S.map){S.map=initLeafletMap('map');if(!S.map)return;}
+ S.map.invalidateSize(true);
+ enableCornerDrawing();
+ $('locError').textContent='Orden obligatorio: arriba izquierda → arriba derecha → abajo derecha → abajo izquierda.';
+ $('confirm').disabled=false;
+}
+function enableCornerDrawing(){
+ const map=S.map,el=$("map");if(!map)return;
+ map.dragging.enable();map.touchZoom.enable();map.doubleClickZoom.enable();map.scrollWheelZoom.enable();map.boxZoom.enable();map.keyboard.enable();
+ el.style.cursor='crosshair';
+ el.style.touchAction='auto';
+ if(window._cornerHandler)map.off('click',window._cornerHandler);
+ if(window._cornerMarkers){window._cornerMarkers.forEach(m=>map.removeLayer(m));}
+ window._cornerMarkers=[];
+ const redraw=()=>{
+   if(S.area&&map.hasLayer(S.area))map.removeLayer(S.area);S.area=null;
+   if(window._cornerMarkers){window._cornerMarkers.forEach(m=>map.removeLayer(m));window._cornerMarkers=[];}
+   S.points.forEach((pt,i)=>{
+     const marker=L.circleMarker(pt,{radius:9,color:'#111827',weight:3,fillColor:'#ffffff',fillOpacity:1}).addTo(map).bindTooltip(String(i+1),{permanent:true,direction:'center',className:'corner-label'});
+     window._cornerMarkers.push(marker);
+   });
+   if(S.points.length>=3)S.area=L.polygon(S.points,{color:'#6d5dfc',fillColor:'#8b5cf6',fillOpacity:.18,weight:3}).addTo(map);
+   if(S.points.length===4){
+     $('areaInfo').textContent='Las 4 esquinas están marcadas · zona lista';
+     $('confirm').disabled=false;
+   }else{
+     $('confirm').disabled=false;
+     $('areaInfo').textContent=S.points.length===0?'Marca la esquina 1: ARRIBA A LA IZQUIERDA':S.points.length===1?'Esquina 1 lista · ahora ARRIBA A LA DERECHA':S.points.length===2?'Esquinas 1-2 listas · ahora ABAJO A LA DERECHA':'Esquinas 1-3 listas · ahora ABAJO A LA IZQUIERDA';
+   }
+ };
+ window._cornerHandler=e=>{
+   if(S.screen!='createZone'||S.zoneConfirmed||S.points.length>=4)return;
+   const p=map.latLngToContainerPoint(e.latlng);
+   const w=el.clientWidth,h=el.clientHeight;
+   const i=S.points.length;
+   const ok = i===0 ? (p.x<=w/2 && p.y<=h/2)
+     : i===1 ? (p.x>w/2 && p.y<=h/2)
+     : i===2 ? (p.x>w/2 && p.y>h/2)
+     : (p.x<=w/2 && p.y>h/2);
+   if(!ok){
+     const mensajes=[
+       'Primero marca la esquina ARRIBA A LA IZQUIERDA.',
+       'Ahora marca la esquina ARRIBA A LA DERECHA.',
+       'Ahora marca la esquina ABAJO A LA DERECHA.',
+       'Ahora marca la esquina ABAJO A LA IZQUIERDA.'
+     ];
+     $('locError').textContent=mensajes[i];
+     return;
+   }
+   S.points.push([e.latlng.lat,e.latlng.lng]);
+   $('locError').textContent='';
+   redraw();
+ };
+ map.on('click',window._cornerHandler);
+ window._resetZoneCorners=()=>{S.points=[];redraw();map.closePopup();};
+ redraw();
+}
+
+async function requestBrowserLocation(onSuccess){
+ if(!navigator.geolocation){$('locError').textContent='Este navegador no permite la ubicación.';return false}
+ $('locError').textContent='Solicitando permiso de ubicación…';
+ return new Promise(resolve=>navigator.geolocation.getCurrentPosition(p=>{onSuccess(p);$('locError').textContent='Ubicación obtenida. No se envía a nadie desde este botón.';resolve(true)},err=>{const text=err.code===1?'Has denegado el permiso de ubicación. Puedes activarlo en los permisos del navegador.':err.code===2?'No se ha podido obtener una posición. Comprueba el GPS.':'La ubicación ha tardado demasiado. Inténtalo de nuevo.';$('locError').textContent=text;resolve(false)},{enableHighAccuracy:true,maximumAge:0,timeout:10000}));
+}
+$('clearArea').onclick=()=>{if(S.screen==='createZone'&&!S.zoneConfirmed&&window._resetZoneCorners)window._resetZoneCorners();};
+$('locate').onclick=async()=>{
+ if(S.screen!='createZone'||!S.map)return;
+ await requestBrowserLocation(p=>{
+   const pos=[p.coords.latitude,p.coords.longitude];
+   S.map.setView(pos,17);
+   if(window._myLocationMarker&&S.map.hasLayer(window._myLocationMarker))S.map.removeLayer(window._myLocationMarker);
+   window._myLocationMarker=L.circleMarker(pos,{radius:8,color:'#2563eb',weight:3,fillColor:'#60a5fa',fillOpacity:.75}).addTo(S.map).bindPopup('Tu ubicación (solo en este teléfono)').openPopup();
+ });
+};
+$('confirm').onclick=()=>{
+ if(!S.host){alert('Solo el creador de la sala puede guardar la zona.');return;}
+ if(S.points.length!==4){alert('Primero marca las 4 esquinas de la zona.');return;}
+ S.zoneConfirmed=true;
+ S.starting=false;
+ if(S.area&&S.map.hasLayer(S.area))S.area.bindPopup('Zona fijada').closePopup();
+ const savedPoints=S.points.map(p=>[p[0],p[1]]);
+ broadcast({type:'state',players:S.players,room:S.room,points:savedPoints,zoneConfirmed:true});
+ broadcast({type:'zone',points:savedPoints});
+ show('lobby');
+ render();
+ $('lobbyText').textContent='Zona guardada. Aquí están los jugadores. Cuando todos estén listos, pulsa «EMPEZAR PARTIDA».';
+ setTimeout(()=>{ if(S.screen==='lobby') window.scrollTo({top:0,behavior:'smooth'}); },50);
+};
+
+function startGame(){
+ show('game');
+ if(!S.gameMap){S.gameMap=initLeafletMap('gameMap');if(!S.gameMap)return}
+ if(S.area&&S.gameMap.hasLayer(S.area))S.gameMap.removeLayer(S.area);
+ let poly=L.polygon(S.points,{color:'#6d5dfc',fillColor:'#8b5cf6',fillOpacity:.16,weight:3}).addTo(S.gameMap);
+ S.area=poly;
+ S.gameMap.fitBounds(poly.getBounds(),{padding:[18,18]});
+ S.gameMap.dragging.disable(); S.gameMap.touchZoom.disable(); S.gameMap.doubleClickZoom.disable(); S.gameMap.scrollWheelZoom.disable(); S.gameMap.boxZoom.disable(); S.gameMap.keyboard.disable();
+ if(S.gameMap.tap)S.gameMap.tap.disable();
+ const bounds=poly.getBounds().pad(0.03); S.gameMap.setMaxBounds(bounds); S.gameMap.options.maxBoundsViscosity=1.0;
+ S.gameMap.options.minZoom=Math.max(S.gameMap.getZoom(), S.gameMap.getBoundsZoom(bounds,false));
+ setTimeout(()=>S.gameMap&&S.gameMap.invalidateSize(true),250);
+ Object.values(S.watchers||{}).forEach(m=>{try{if(S.gameMap.hasLayer(m))S.gameMap.removeLayer(m)}catch(e){}});
+ S.watchers={};
+ if(S.name===S.seeker){
+   $('gameTitle').textContent='Busca a los demás';
+   $('status').className='status good';
+   $('status').textContent='Recibirás las ubicaciones de los demás con 5 segundos de retraso.';
+   $('gameText').textContent='Solo tú puedes ver las posiciones de los demás jugadores.';
+   $('gameText').insertAdjacentHTML('afterend','<p id="delayNote" class="delay-note">📍 Ubicaciones de los demás: retraso de 5 s</p>');
+   S.caught=new Set(); renderCaughtButtons();
+   if(locTimer){clearInterval(locTimer);locTimer=null}
+ }else{
+   $('gameTitle').textContent='Huye del cazador';
+   $('status').className='status warn';
+   $('status').textContent='Solo compartes tu ubicación con quien se la queda.';
+   $('gameText').textContent='Para jugar, la aplicación necesita tu permiso para compartir tu ubicación con el cazador.';
+   const old=$('delayNote');if(old)old.remove(); $('caughtPanel').classList.add('hidden');
+   setTimeout(()=>{
+     const acepta=window.confirm('¿Permitir que tu ubicación se comparta con quien se la queda durante la partida?');
+     if(acepta)startLocationSharing();
+     else $('gameText').textContent='No has permitido compartir tu ubicación. Puedes volver a intentarlo al reiniciar la partida.';
+   },350);
+ }
+}
+let locTimer=null;
+const LOCATION_DELAY=5000;
+const delayedLocationTimers=new Set();
+function queueDelayedLocation(msg){
+ if(S.name!==S.seeker)return;
+ const delay=Math.max(0,LOCATION_DELAY-(Date.now()-(msg.sentAt||Date.now())));
+ const timer=setTimeout(()=>{delayedLocationTimers.delete(timer);showRemoteLocation(msg)},delay);
+ delayedLocationTimers.add(timer);
+}
+function startLocationSharing(){
+ if(locTimer)return;
+ if(!navigator.geolocation){$('gameText').textContent='Tu navegador no permite compartir ubicación.';return}
+ const send=()=>navigator.geolocation.getCurrentPosition(p=>{
+   const msg={type:'location',playerId:S.peer?.id||'me',name:S.name,emoji:playerEmoji(S.name),lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,sentAt:Date.now()};
+   S.lastLocation=msg;
+   showOwnLocation(msg);
+   if(S.host)relayLocation(msg);else safeSend(S.hostConn,msg);
+ },err=>{
+   if(err.code===1){$('gameText').textContent='No has dado permiso para compartir tu ubicación. Puedes activarlo en los permisos del navegador.';if(locTimer){clearInterval(locTimer);locTimer=null}}
+   else $('gameText').textContent='No se pudo actualizar tu ubicación. Comprueba el GPS.';
+ },{enableHighAccuracy:true,maximumAge:1000,timeout:8000});
+ send();
+ locTimer=setInterval(send,1000);
+}
+function showOwnLocation(msg){
+ if(S.name===S.seeker||!S.gameMap)return;
+ const key='own-location';
+ if(S.watchers[key])S.gameMap.removeLayer(S.watchers[key]);
+ S.watchers[key]=L.marker([msg.lat,msg.lng],{icon:L.divIcon({className:'emoji-marker',html:'<div style="font-size:30px">'+msg.emoji+'</div>',iconSize:[36,36],iconAnchor:[18,18]})}).addTo(S.gameMap).bindPopup((msg.emoji||'👤')+' Tu ubicación');
+}
+function showRemoteLocation(msg){
+ if(S.name!==S.seeker||!S.gameMap)return;
+ let key='remote-'+msg.playerId;
+ if(S.watchers[key])S.gameMap.removeLayer(S.watchers[key]);
+ S.watchers[key]=L.marker([msg.lat,msg.lng],{icon:L.divIcon({className:'emoji-marker',html:'<div style="font-size:30px">'+msg.emoji+'</div>',iconSize:[36,36],iconAnchor:[18,18]})}).addTo(S.gameMap).bindPopup((msg.emoji||'👤')+' '+String(msg.name||''));
+}
+function renderCaughtButtons(){
+ const panel=$('caughtPanel'),box=$('caughtButtons');
+ if(S.name!==S.seeker){panel.classList.add('hidden');return;}
+ box.innerHTML='';
+ const targets=S.players.filter(p=>p.name!==S.seeker && !S.caught.has(p.id));
+ if(!targets.length){panel.classList.add('hidden');return;}
+ panel.classList.remove('hidden');
+ targets.forEach(p=>{
+   const b=document.createElement('button'); b.className='btn outline'; b.style.marginTop='8px'; b.textContent=(p.emoji||'👤')+' '+p.name+' · ¡LO HE PILLADO!';
+   b.onclick=()=>catchPlayer(p.id); box.appendChild(b);
+ });
+}
+function catchPlayer(playerId){
+ if(S.name!==S.seeker || S.caught.has(playerId))return;
+ S.caught.add(playerId);
+ const msg={type:'caught',playerId};
+ if(S.host){handleCaught(playerId);broadcast(msg);}else safeSend(S.hostConn,msg);
+ renderCaughtButtons();
+ if(S.caught.size>=S.players.filter(p=>p.name!==S.seeker).length) finishCaughtGame();
+}
+function handleCaught(playerId){
+ if(!S.seeker)return;
+ S.caught.add(playerId);
+ if(S.name===S.seeker)renderCaughtButtons();
+ broadcast({type:'caughtSync',playerId});
+ if(S.caught.size>=S.players.filter(p=>p.name!==S.seeker).length) finishCaughtGame();
+}
+function applyCaught(playerId){
+ S.caught.add(playerId);
+ if(playerId===(S.peer?.id||'me') && locTimer){clearInterval(locTimer);locTimer=null;$("gameText").textContent='Te han pillado. Tu ubicación deja de compartirse.';}
+ const key='remote-'+playerId;
+ if(S.watchers[key]&&S.gameMap){try{S.gameMap.removeLayer(S.watchers[key])}catch(e){}}
+ delete S.watchers[key];
+ if(S.name===S.seeker)renderCaughtButtons();
+}
+function finishCaughtGame(){
+ const msg={type:'end',reason:'all-caught'};
+ if(S.host){broadcast(msg);resetMatch(true);show('lobby');render();$('lobbyText').textContent='¡Todos han sido pillados! Puedes empezar otra partida.';}
+ else safeSend(S.hostConn,msg);
+}
+
+function resetMatch(keepLobby=true){
+ if(S.countdownTimer){clearInterval(S.countdownTimer);S.countdownTimer=null;}
+ if(locTimer){clearInterval(locTimer);locTimer=null;}
+ delayedLocationTimers.forEach(t=>clearTimeout(t));
+ delayedLocationTimers.clear();
+ Object.values(S.watchers||{}).forEach(m=>{try{if(S.gameMap&&S.gameMap.hasLayer(m))S.gameMap.removeLayer(m)}catch(e){}});
+ S.watchers={};
+ S.seeker='';
+ S.caught=new Set();
+ S.starting=false;
+ S.roleReady=false;
+ const note=$('delayNote');if(note)note.remove();
+ $('gameTitle').textContent='Partida';
+ $('status').textContent='';
+ $('gameText').textContent='';
+ if(keepLobby)render();
+}
+$("end").onclick=()=>{
+ resetMatch(true);
+ if(S.host){broadcast({type:'end',round:S.round});show('lobby');}
+ else safeSend(S.hostConn,{type:'end'});
+ render();
+};
+})();
+</script>
+</body>
+</html>

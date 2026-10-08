@@ -1,0 +1,6 @@
+{
+  "appId": "com.escondite.app",
+  "appName": "Escondite",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}
